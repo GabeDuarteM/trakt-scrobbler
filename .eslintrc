@@ -1,0 +1,24 @@
+{
+  "extends": ["prettier"],
+  "rules": {
+    "prettier/prettier": [
+      "error",
+      {
+        "semi": false
+      }
+    ]
+  },
+  "plugins": ["prettier"],
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    },
+    "sourceType": "module"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es6": true
+  }
+}

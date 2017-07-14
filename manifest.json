@@ -1,0 +1,37 @@
+{
+  "name": "Trakt Scrobbler",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "description": "This extension was created with the awesome extensionizr.com",
+  "homepage_url": "http://extensionizr.com",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "default_locale": "en",
+  "browser_action": {
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "19": "icons/icon19.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Trakt-Scrobbler",      // optional; shown in tooltip
+    "default_popup": "popup.html"        // optional
+  },
+  "permissions": [
+    "tabs",
+    "notifications",
+    "storage",
+    "http://www.crunchyroll.com/*",
+    "https://www.crunchyroll.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["*://*.crunchyroll.com/*"],
+      "js": ["inject.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
