@@ -16,6 +16,8 @@ function getPatterns() {
     { from: "icons", to: "icons" },
     { from: "src/popup.html" },
     { from: "src/popup.css" },
+    { from: "src/successAuth.html" },
+    { from: "src/successAuth.css" },
     { from: "manifest.json" }
   ]
 }
@@ -25,7 +27,8 @@ function getBaseConfig() {
     devtool: "source-map",
     entry: {
       inject: resolve("src", "inject.js"),
-      popup: resolve("src", "popup.js")
+      popup: resolve("src", "popup.js"),
+      successAuth: resolve("src", "successAuth.js")
     },
     plugins: [
       new CleanWebpackPlugin(["dist"]),

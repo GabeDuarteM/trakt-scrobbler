@@ -18,7 +18,6 @@
   display: inline-block;
   height: 36px;
   line-height: 36px;
-  padding: 0 2rem;
   text-transform: uppercase;
   vertical-align: middle;
   -webkit-tap-highlight-color: transparent;
@@ -30,30 +29,30 @@
   text-decoration: none;
 }
 
-.auth {
+.login {
   background-color: #009688;
   width: 100%;
   color: white;
 }
 
-.auth:hover {
+.login:hover {
   background-color: #00897b;
 }
 
-.auth:active {
+.login:active {
   background-color: #00796b;
 }
 
-.sign-out {
+.logout {
   background-color: #d32f2f;
   width: 100%;
   color: white;
 }
 
-.sign-out:hover {
+.logout:hover {
   background-color: #c62828;
 }
 
-.sign-out:active {
+.logout:active {
   background-color: #b71c1c;
 }
