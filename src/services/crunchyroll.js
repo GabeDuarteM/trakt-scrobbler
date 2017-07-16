@@ -9,6 +9,7 @@ export default class Crunchyroll {
     this.Episode = null
     this.Api = new TraktApi()
     this.IsScrobblePlaying = false
+    this.Watched = false
 
     this.SetPlayerEvents()
   }
@@ -17,6 +18,7 @@ export default class Crunchyroll {
     if (this.CheckValidPage()) {
       this.Player.onplay = await this.StartPauseScrobble.bind(this, true)
       this.Player.onpause = await this.StartPauseScrobble.bind(this, false)
+      window.onunload = await ::this.StopScrobble
     }
   }
 
@@ -40,12 +42,24 @@ export default class Crunchyroll {
 
     const progressPercentage = Math.floor(this.Player.currentTime / this.Player.duration * 100)
 
-    this.Api.StartPauseScrobble(this.Episode, progressPercentage, isStart).then(data => {
-      this.IsScrobblePlaying = isStart
-    })
+    if (progressPercentage < 90) {
+      this.Api.StartPauseScrobble(this.Episode, progressPercentage, isStart).then(data => {
+        this.IsScrobblePlaying = isStart
+      })
+    } else {
+      this.Api.WatchEpisode(this.Episode).then(data => {
+        console.log("episodio watchado")
+        this.Watched = true
+      })
+    }
   }
 
-  StopScrobble() {}
+  StopScrobble() {
+    const progressPercentage = Math.floor(this.Player.currentTime / this.Player.duration * 100)
+    this.Api.StopScrobble(this.Episode, progressPercentage).then(data => {
+      console.log("Scrobble stoppado")
+    })
+  }
 
   async FillEpisodeIfNecessary() {
     if (!this.Episode) {
@@ -59,7 +73,7 @@ export default class Crunchyroll {
   }
 
   async CheckIfReadyToScrobble() {
-    if (this.Api.NoToken) {
+    if (this.Api.NoToken || this.Watched) {
       return false
     }
 

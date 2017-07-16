@@ -1,5 +1,6 @@
 import TraktApi from "trakt.tv"
 import { TraktOptions } from "./constants"
+import moment from "moment"
 
 export default class Api {
   constructor() {
@@ -43,6 +44,28 @@ export default class Api {
     } else {
       return this.Trakt.scrobble.pause({ episode, progress })
     }
+  }
+
+  StopScrobble(episode, progress) {
+    return this.Trakt.scrobble.stop({ episode, progress })
+  }
+
+  async WatchEpisode(episode) {
+    const watches = await this.Trakt.sync.history.get({ type: "episodes", id: episode.ids.trakt })
+    console.log(watches)
+    if (this.CheckIfShouldWatch(watches)) {
+      return this.Trakt.sync.history.add({ episodes: [episode] })
+    }
+  }
+
+  CheckIfShouldWatch(watches) {
+    if (!watches) {
+      return true
+    }
+    const watchedDate = moment(watches[0].watched_at.slice(0, watches[0].watched_at.length))
+    const watchedHoursAgo = moment().diff(watchedDate, "hours")
+    console.log(watchedHoursAgo)
+    return watchedHoursAgo >= 3
   }
 
   async GetSeasons(showSlug) {

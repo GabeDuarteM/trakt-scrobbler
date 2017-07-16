@@ -28,6 +28,7 @@
     "webpack": "^3.2.0"
   },
   "dependencies": {
+    "moment": "^2.18.1",
     "trakt.tv": "^5.1.0"
   }
 }
