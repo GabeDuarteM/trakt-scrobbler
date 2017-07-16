@@ -4,10 +4,12 @@ import Log from "./utils/logger"
 var readyStateInterval = setInterval(function() {
   if (document.readyState === "complete") {
     clearInterval(readyStateInterval)
-    const service = getCurrentService(window.location.href)
-    if (service.CheckValidPage()) {
-      service.StartScrobble()
-    }
+    setTimeout(function() {
+      const service = getCurrentService(window.location.href)
+      if (service.CheckValidPage()) {
+        service.StartPauseScrobble()
+      }
+    }, 5000)
   }
 }, 10)
 

@@ -26,14 +26,11 @@ function getBaseConfig() {
   return {
     devtool: "source-map",
     entry: {
-      inject: resolve("src", "inject.js"),
+      inject: ["babel-polyfill", resolve("src", "inject.js")],
       popup: resolve("src", "popup.js"),
       successAuth: resolve("src", "successAuth.js")
     },
-    plugins: [
-      new CleanWebpackPlugin(["dist"]),
-      new CopyWebpackPlugin(getPatterns())
-    ],
+    plugins: [new CleanWebpackPlugin(["dist"]), new CopyWebpackPlugin(getPatterns())],
     output: {
       path: join(__dirname, "dist"),
       filename: "[name].js",

@@ -1,17 +1,23 @@
 import Log from "../utils/logger"
-import Trakt from "trakt.tv"
-
-import { TraktOptions } from "../utils/constants"
+import TraktApi from "../utils/api"
+import { sleep } from "../utils/helper"
 
 export default class Crunchyroll {
   constructor() {
     this.Player = document.querySelector("#video_html5_api")
-    this.Api = new Trakt(TraktOptions)
-    chrome.storage.sync.get("token", val => {
-      if (val.token) {
-        this.Api.import_token(val.token)
-      }
-    })
+    this.Show = null
+    this.Episode = null
+    this.Api = new TraktApi()
+    this.IsScrobblePlaying = false
+
+    this.SetPlayerEvents()
+  }
+
+  async SetPlayerEvents() {
+    if (this.CheckValidPage()) {
+      this.Player.onplay = await this.StartPauseScrobble.bind(this, true)
+      this.Player.onpause = await this.StartPauseScrobble.bind(this, false)
+    }
   }
 
   CheckValidPage() {
@@ -27,43 +33,42 @@ export default class Crunchyroll {
     }
   }
 
-  SearchEpisode(queryTitle, absoluteEpisode) {
-    debugger
+  async StartPauseScrobble(isStart = !this.IsScrobblePlaying) {
+    if (!await this.CheckIfReadyToScrobble()) {
+      return
+    }
 
-    this.Api.search
-      .text({ type: "show", query: queryTitle })
-      .then(data => {
-        if (!data || data.length <= 0) {
-          Log("error", "Show not found: " + queryTitle)
-        }
+    const progressPercentage = Math.floor(this.Player.currentTime / this.Player.duration * 100)
 
-        const searchResult = data[0]
-
-        return searchResult.show.ids.slug
-      })
-      .then(data => this.Api.seasons.summary({ id: data, extended: "full" }))
-      .then(data => {
-        const seasons = data.filter(season => season.title !== "Specials")
-        for (var i = 0; i < seasons.length; i++) {
-          var season = seasons[i]
-          if
-        }
-        console.log(data)
-      })
-  }
-
-  StartScrobble() {
-    chrome.storage.sync.get("token", val => {
-      if (val.token) {
-        const episodeInfo = this.GetEpisodeInfo()
-        const show = this.SearchEpisode(
-          episodeInfo.queryTitle,
-          episodeInfo.absoluteEpisode
-        )
-        this.Api.scrobble.start()
-      }
+    this.Api.StartPauseScrobble(this.Episode, progressPercentage, isStart).then(data => {
+      this.IsScrobblePlaying = isStart
     })
   }
 
   StopScrobble() {}
+
+  async FillEpisodeIfNecessary() {
+    if (!this.Episode) {
+      const episodeInfo = this.GetEpisodeInfo()
+      this.Show = await this.Api.GetShow(episodeInfo.queryTitle)
+      this.Episode = await this.Api.GetEpisode({
+        showSlug: this.Show.ids.slug,
+        absoluteNum: episodeInfo.absoluteEpisode
+      })
+    }
+  }
+
+  async CheckIfReadyToScrobble() {
+    if (this.Api.NoToken) {
+      return false
+    }
+
+    await this.FillEpisodeIfNecessary()
+
+    while (this.Player.currentTime === 0) {
+      await sleep(100)
+    }
+
+    return true
+  }
 }
