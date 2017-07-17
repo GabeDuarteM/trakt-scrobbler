@@ -1,21 +1,22 @@
+import { Service } from "./services/service"
 import Crunchyroll from "./services/crunchyroll"
-import Log from "./utils/logger"
+import { ErrorLog } from "./utils/logger"
 
-var readyStateInterval = setInterval(function() {
+const readyStateInterval = setInterval(() => {
   if (document.readyState === "complete") {
     clearInterval(readyStateInterval)
-    setTimeout(function() {
+    setTimeout(() => {
       const service = getCurrentService(window.location.href)
       if (service.CheckValidPage()) {
         service.StartPauseScrobble()
       }
     }, 5000)
   }
-}, 10)
+}, 100)
 
-function getCurrentService(url) {
+function getCurrentService(url: string): Service {
   if (url.includes("crunchyroll")) {
     return new Crunchyroll()
   }
-  Log("error", "invalid URL: " + url)
+  throw ErrorLog("Invalid URL: " + url)
 }

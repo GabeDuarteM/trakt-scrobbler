@@ -1,12 +1,20 @@
-import Log from "../utils/logger"
+import { ErrorLog } from "../utils/logger"
 import TraktApi from "../utils/api"
 import { sleep } from "../utils/helper"
+import { ShowT, EpisodeT } from "../../typings/trakt.tv"
+import { Service } from "./service"
 
-export default class Crunchyroll {
+export default class Crunchyroll extends Service {
+  Player: HTMLVideoElement
+  Show: ShowT
+  Episode: EpisodeT
+  Api: TraktApi
+  IsScrobblePlaying: boolean
+  Watched: boolean
+
   constructor() {
-    this.Player = document.querySelector("#video_html5_api")
-    this.Show = null
-    this.Episode = null
+    super()
+    this.Player = document.querySelector("#video_html5_api") as HTMLVideoElement
     this.Api = new TraktApi()
     this.IsScrobblePlaying = false
     this.Watched = false
@@ -14,28 +22,33 @@ export default class Crunchyroll {
     this.SetPlayerEvents()
   }
 
-  async SetPlayerEvents() {
+  async SetPlayerEvents(): Promise<void> {
     if (this.CheckValidPage()) {
       this.Player.onplay = await this.StartPauseScrobble.bind(this, true)
       this.Player.onpause = await this.StartPauseScrobble.bind(this, false)
-      window.onunload = await ::this.StopScrobble
+      window.onunload = await this.StopScrobble
     }
   }
 
-  CheckValidPage() {
+  CheckValidPage(): boolean {
     return !!this.Player
   }
 
-  GetEpisodeInfo() {
+  GetEpisodeInfo(): EpisodeInfoT {
     const rgx = /\/(.*?)\/episode-(\d+)-/
     const matches = rgx.exec(location.pathname)
-    return {
-      queryTitle: matches[1],
-      absoluteEpisode: matches[2]
+
+    if (matches) {
+      return {
+        queryTitle: matches[1],
+        absoluteEpisode: Number(matches[2])
+      }
     }
+
+    throw ErrorLog("No match found for the current episode:")
   }
 
-  async StartPauseScrobble(isStart = !this.IsScrobblePlaying) {
+  async StartPauseScrobble(isStart = !this.IsScrobblePlaying): Promise<void> {
     if (!await this.CheckIfReadyToScrobble()) {
       return
     }
@@ -43,25 +56,24 @@ export default class Crunchyroll {
     const progressPercentage = Math.floor(this.Player.currentTime / this.Player.duration * 100)
 
     if (progressPercentage < 90) {
-      this.Api.StartPauseScrobble(this.Episode, progressPercentage, isStart).then(data => {
+      this.Api.StartPauseScrobble(this.Episode, progressPercentage, isStart).then(() => {
         this.IsScrobblePlaying = isStart
       })
     } else {
-      this.Api.WatchEpisode(this.Episode).then(data => {
-        console.log("episodio watchado")
+      this.Api.WatchEpisode(this.Episode).then(() => {
         this.Watched = true
       })
     }
   }
 
-  StopScrobble() {
+  StopScrobble(): Promise<void> {
     const progressPercentage = Math.floor(this.Player.currentTime / this.Player.duration * 100)
-    this.Api.StopScrobble(this.Episode, progressPercentage).then(data => {
+    return this.Api.StopScrobble(this.Episode, progressPercentage).then(() => {
       console.log("Scrobble stoppado")
     })
   }
 
-  async FillEpisodeIfNecessary() {
+  async FillEpisodeIfNecessary(): Promise<void> {
     if (!this.Episode) {
       const episodeInfo = this.GetEpisodeInfo()
       this.Show = await this.Api.GetShow(episodeInfo.queryTitle)
@@ -72,7 +84,7 @@ export default class Crunchyroll {
     }
   }
 
-  async CheckIfReadyToScrobble() {
+  async CheckIfReadyToScrobble(): Promise<boolean> {
     if (this.Api.NoToken || this.Watched) {
       return false
     }
@@ -85,4 +97,9 @@ export default class Crunchyroll {
 
     return true
   }
+}
+
+interface EpisodeInfoT {
+  queryTitle: string
+  absoluteEpisode: number
 }

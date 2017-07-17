@@ -20,13 +20,7 @@
     "default_title": "Trakt-Scrobbler",
     "default_popup": "popup.html"
   },
-  "permissions": [
-    "tabs",
-    "notifications",
-    "storage",
-    "*://*.crunchyroll.com/*",
-    "*://*.trakt.tv/*"
-  ],
+  "permissions": ["tabs", "notifications", "storage", "*://*.crunchyroll.com/*", "*://*.trakt.tv/*"],
   "content_scripts": [
     {
       "matches": ["*://*.crunchyroll.com/*"],
