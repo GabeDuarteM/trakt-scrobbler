@@ -7,6 +7,7 @@ const traktScrobblerMessage = (type: typeMessage | "ERROR", message: string) => 
 export const Log = (type: typeMessage, message: string): void => {
   const logMessage = traktScrobblerMessage(type, message)
 
+  // tslint:disable-next-line:no-console
   console.log(logMessage)
 }
 

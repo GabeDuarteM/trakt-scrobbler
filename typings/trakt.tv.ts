@@ -1,4 +1,4 @@
-interface IdsT {
+interface IIds {
   trakt: number
   slug: string
   tvdb: number
@@ -7,9 +7,9 @@ interface IdsT {
   tvrage: number
 }
 
-export interface SeasonT {
+export interface ISeason {
   number: number
-  ids: IdsT
+  ids: IIds
   rating: number
   votes: number
   episode_count: number
@@ -19,10 +19,10 @@ export interface SeasonT {
   first_aired: string
 }
 
-export interface ShowT {
+export interface IShow {
   title: string
   year: number
-  ids: IdsT
+  ids: IIds
   overview: string
   first_aired: string
   airs: {
@@ -46,26 +46,26 @@ export interface ShowT {
   aired_episodes: number
 }
 
-interface TypeResultT {
+interface ITypeResult {
   title: string
   year: number
-  ids: IdsT
+  ids: IIds
   season: number
   number: number
 }
 
-export interface TextQueryResultT {
+export interface ITextQueryResult {
   type: "show" | "movie"
   score: number
-  show: TypeResultT
-  movie: TypeResultT
+  show: ITypeResult
+  movie: ITypeResult
 }
 
-export interface EpisodeT {
+export interface IEpisode {
   season: number
   number: number
   title: string
-  ids: IdsT
+  ids: IIds
   number_abs: number
   overview: string
   rating: number
@@ -76,21 +76,21 @@ export interface EpisodeT {
   runtime: number
 }
 
-export interface WatchT {
+export interface IWatch {
   id: number
   watched_at: string
   action: "scrobble" | "checkin" | "watch"
   type: "movie" | "episode"
-  movie: TypeResultT
+  movie: ITypeResult
 }
 
-export interface TraktOptionsT {
+export interface ITraktOptions {
   client_id: string
   client_secret: string
   redirect_uri: string
 }
 
-export interface TokenT {
+export interface IToken {
   access_token: string
   expires: number
   refresh_token: string

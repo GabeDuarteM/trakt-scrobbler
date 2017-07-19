@@ -1,5 +1,5 @@
-import { Service } from "./services/service"
 import Crunchyroll from "./services/crunchyroll"
+import { Service } from "./services/service"
 import { ErrorLog } from "./utils/logger"
 
 const readyStateInterval = setInterval(() => {

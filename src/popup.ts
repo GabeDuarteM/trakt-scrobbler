@@ -1,13 +1,14 @@
-import { ErrorLog } from "./utils/logger"
 import * as Trakt from "trakt.tv"
+
+import { IToken } from "../typings/trakt.tv"
 import { TraktOptions } from "./utils/constants"
-import { TokenT } from "../typings/trakt.tv"
+import { ErrorLog } from "./utils/logger"
 
 UpdateUI()
 const api = new Trakt(TraktOptions)
 
 function UpdateUI(): void {
-  chrome.storage.sync.get("token", (val: ChromeObjT<TokenT>) => {
+  chrome.storage.sync.get("token", (val: IChromeObj<IToken>) => {
     const btn = document.querySelector("#btn-auth")
 
     if (!btn || !(btn instanceof HTMLAnchorElement)) {
@@ -37,6 +38,6 @@ function Logout(): void {
   })
 }
 
-interface ChromeObjT<T> {
+interface IChromeObj<T> {
   [key: string]: T
 }

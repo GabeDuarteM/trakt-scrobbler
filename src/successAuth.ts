@@ -1,4 +1,5 @@
 import * as Trakt from "trakt.tv"
+
 import { TraktOptions } from "./utils/constants"
 
 const url = new URL(location.href)

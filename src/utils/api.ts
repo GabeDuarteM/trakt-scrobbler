@@ -1,13 +1,14 @@
-import * as TraktApi from "trakt.tv"
 import * as moment from "moment"
+import * as TraktApi from "trakt.tv"
 
+import { IEpisode, ISeason, IShow, ITextQueryResult, IWatch } from "../../typings/trakt.tv"
 import { TraktOptions } from "./constants"
-import { EpisodeT, SeasonT, ShowT, TextQueryResultT, WatchT } from "../../typings/trakt.tv"
 import { ErrorLog, Log } from "./logger"
 
 export default class Api {
-  Trakt: any
-  NoToken: boolean
+  public NoToken: boolean
+  private Trakt: any
+
   constructor() {
     this.Trakt = new TraktApi(TraktOptions)
     chrome.storage.sync.get("token", val => {
@@ -19,18 +20,21 @@ export default class Api {
     })
   }
 
-  async GetShow(title: string): Promise<ShowT> {
-    const show: ShowT = await this.Trakt.search.text({ type: "show", query: title }).then((show: TextQueryResultT[]) => {
-      if (!show || show.length <= 0) {
-        throw ErrorLog("Show not found: " + title)
-      }
+  public async GetShow(title: string): Promise<IShow> {
+    const show: IShow = await this.Trakt.search
+      .text({ type: "show", query: title })
+      .then((data: ITextQueryResult[]) => {
+        if (!data || data.length <= 0) {
+          throw ErrorLog("Show not found: " + title)
+        }
 
-      return show[0].show
-    })
+        return data[0].show
+      })
+
     return show
   }
 
-  async GetEpisode({ showSlug, seasonNum, episodeNum, absoluteNum }: GetEpisodeParams) {
+  public async GetEpisode({ showSlug, seasonNum, episodeNum, absoluteNum }: IGetEpisodeParams) {
     if (absoluteNum) {
       const seasonAndEpisode = await this.ConvertAbsoluteEpisode(showSlug, absoluteNum)
 
@@ -38,16 +42,16 @@ export default class Api {
       episodeNum = seasonAndEpisode.episodeNum
     }
 
-    const episode: EpisodeT = await this.Trakt.episodes.summary({
+    const episode: IEpisode = await this.Trakt.episodes.summary({
+      episode: episodeNum,
       id: showSlug,
-      season: seasonNum,
-      episode: episodeNum
+      season: seasonNum
     })
 
     return episode
   }
 
-  StartPauseScrobble(episode: EpisodeT, progress: number, isScrobblePlaying: boolean): Promise<void> {
+  public StartPauseScrobble(episode: IEpisode, progress: number, isScrobblePlaying: boolean): Promise<void> {
     if (isScrobblePlaying) {
       return this.Trakt.scrobble.start({ episode, progress })
     } else {
@@ -55,39 +59,39 @@ export default class Api {
     }
   }
 
-  StopScrobble(episode: EpisodeT, progress: number): Promise<void> {
+  public StopScrobble(episode: IEpisode, progress: number): Promise<void> {
     return this.Trakt.scrobble.stop({ episode, progress })
   }
 
-  async WatchEpisode(episode: EpisodeT): Promise<void> {
-    const watches: WatchT[] = await this.Trakt.sync.history.get({ type: "episodes", id: episode.ids.trakt })
+  public async WatchEpisode(episode: IEpisode): Promise<void> {
+    const watches: IWatch[] = await this.Trakt.sync.history.get({ type: "episodes", id: episode.ids.trakt })
     if (this.CheckIfShouldWatch(watches)) {
       return this.Trakt.sync.history.add({ episodes: [episode] })
     }
   }
 
-  CheckIfShouldWatch(watches: WatchT[]): boolean {
+  private CheckIfShouldWatch(watches: IWatch[]): boolean {
     if (!watches) {
       return true
     }
     const watchedDate: moment.Moment = moment(watches[0].watched_at.slice(0, watches[0].watched_at.length))
     const watchedHoursAgo: number = moment().diff(watchedDate, "hours")
+
     return watchedHoursAgo >= 3
   }
 
-  async GetSeasons(showSlug: string): Promise<SeasonT[]> {
-    const seasons: SeasonT[] = await this.Trakt.seasons.summary({
-      id: showSlug,
-      extended: "full"
+  private async GetSeasons(showSlug: string): Promise<ISeason[]> {
+    const seasons: ISeason[] = await this.Trakt.seasons.summary({
+      extended: "full",
+      id: showSlug
     })
+
     return seasons.filter(season => season.title !== "Specials")
   }
 
-  GetSeasonFromAbsoluteEp(seasons: SeasonT[], absoluteNum: number): SeasonT {
+  private GetSeasonFromAbsoluteEp(seasons: ISeason[], absoluteNum: number): ISeason {
     let totalEpisodes = 0
-    for (let i = 0; i < seasons.length; i++) {
-      const season = seasons[i]
-
+    for (const season of seasons) {
       totalEpisodes += season.episode_count
       if (totalEpisodes >= absoluteNum) {
         return season
@@ -97,7 +101,7 @@ export default class Api {
     throw ErrorLog("Episode not found.")
   }
 
-  async ConvertAbsoluteEpisode(showSlug: string, absoluteNum: number): Promise<S00E00> {
+  private async ConvertAbsoluteEpisode(showSlug: string, absoluteNum: number): Promise<IS00E00> {
     const seasons = await this.GetSeasons(showSlug)
     const season = this.GetSeasonFromAbsoluteEp(seasons, absoluteNum)
 
@@ -107,7 +111,7 @@ export default class Api {
     return this.CalculateSeasonAndEpisodeNumber(season, absoluteNum, totalEpisodes)
   }
 
-  CalculateSeasonAndEpisodeNumber(season: SeasonT, absoluteNum: number, totalEpisodes: number): S00E00 {
+  private CalculateSeasonAndEpisodeNumber(season: ISeason, absoluteNum: number, totalEpisodes: number): IS00E00 {
     const episodesOutsideCurrentSeason = totalEpisodes - season.episode_count
     const episodeNum = absoluteNum - episodesOutsideCurrentSeason
 
@@ -115,12 +119,12 @@ export default class Api {
   }
 }
 
-interface S00E00 {
+interface IS00E00 {
   seasonNum: number
   episodeNum: number
 }
 
-interface GetEpisodeParams {
+interface IGetEpisodeParams {
   showSlug: string
   seasonNum?: number
   episodeNum?: number
